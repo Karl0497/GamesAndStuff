@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Common;
+using Common.Context;
 using KpBot;
-using KpBot.Context;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -31,7 +31,7 @@ namespace GamesAndStuff
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddRazorPages();
-            services.AddDbContext<DiscordContext>(options => options.UseSqlServer(Configuration.GetConnectionString("DiscordContext")));
+            services.AddDbContext<GamesAndStuffContext>(options => options.UseSqlServer(Configuration.GetConnectionString("GamesAndStuffContext")));
 
             // Config
             services.Configure<AppSettingsConfiguration>(Configuration);
@@ -41,7 +41,7 @@ namespace GamesAndStuff
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, GamesAndStuffContext context)
         {
             if (env.IsDevelopment())
             {

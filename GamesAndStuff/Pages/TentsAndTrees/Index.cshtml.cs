@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Common;
-using KpBot.Context;
+using Common.Context;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -13,9 +13,9 @@ namespace GamesAndStuff.Pages.TentsAndTrees
 {
     public class IndexModel : PageModel
     {
-        private DiscordContext gameContext;
+        private GamesAndStuffContext gameContext;
 
-        public IndexModel(DiscordContext context)
+        public IndexModel(GamesAndStuffContext context)
         {
             gameContext = context;
         }
@@ -77,12 +77,6 @@ namespace GamesAndStuff.Pages.TentsAndTrees
 
         public void OnGet()
         {
-
-            var s = new Student();
-            gameContext.Students.Add(s);
-            gameContext.SaveChanges();
-
-
             InitiateNumberList();
             Grid = new List<GridCell>();
             for (int i = 0; i < Size; i++)

@@ -1,8 +1,10 @@
-﻿using Discord;
+﻿using Common;
+using Common.Context;
+using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using KpBot.Context;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -11,23 +13,15 @@ using System.Threading.Tasks;
 
 namespace KpBot.Services
 {
-    public class CommandHandlingService
+    public class CommandHandlingService : BaseService
     {
-        private readonly CommandService _commands;
-        private readonly DiscordSocketClient _discord;
-        private readonly IServiceProvider _services;
-
-        public CommandHandlingService(IServiceProvider services)
+        public CommandHandlingService(IServiceProvider services) : base(services)
         {
-            _commands = services.GetRequiredService<CommandService>();
-            _discord = services.GetRequiredService<DiscordSocketClient>();
-            _services = services;
-
             // Hook CommandExecuted to handle post-command-execution logic.
             _commands.CommandExecuted += CommandExecutedAsync;
             // Hook MessageReceived so we can process each message to see
             // if it qualifies as a command.
-            _discord.MessageReceived += MessageReceivedAsync;
+            _client.MessageReceived += MessageReceivedAsync;
         }
 
         public async Task InitializeAsync()
@@ -41,7 +35,6 @@ namespace KpBot.Services
             // Ignore system messages, or messages from other bots
             if (!(rawMessage is SocketUserMessage message)) return;
             if (message.Source != MessageSource.User) return;
-
             // This value holds the offset where the prefix ends
             var argPos = 0;
             // Perform prefix check. You may want to replace this with
@@ -49,7 +42,7 @@ namespace KpBot.Services
             // for a more traditional command format like !help.
             if (!message.HasCharPrefix('!', ref argPos)) return;
 
-            var context = new SocketCommandContext(_discord, message);
+            var context = new SocketCommandContext(_client, message);
             // Perform the execution of the command. In this method,
             // the command service will perform precondition and parsing check
             // then execute the command if one is matched.

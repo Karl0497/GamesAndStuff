@@ -12,10 +12,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using WindowsInput;
 using Microsoft.Extensions.Configuration;
-using KpBot.Context;
 using Microsoft.EntityFrameworkCore;
 using Common;
 using Microsoft.Extensions.Options;
+using Common.Context;
 
 namespace KpBot
 {
@@ -27,6 +27,8 @@ namespace KpBot
                    .AddSingleton<DiscordSocketClient>()
                    .AddSingleton<CommandService>()
                    .AddSingleton<CommandHandlingService>()
+                   .AddSingleton<EventHandlingService>()
+                   .AddSingleton<DiscordUserService>()
                    .AddSingleton<HttpClient>();
         }
     }
@@ -37,7 +39,7 @@ namespace KpBot
 
         public MainBot(IServiceProvider services)
         {
-            _services = services;
+            _services = services;       
         }
 
         public async Task MainAsync()
@@ -56,6 +58,7 @@ namespace KpBot
 
             // Here we initialize the logic required to register our commands.
             await _services.GetRequiredService<CommandHandlingService>().InitializeAsync();
+            _services.GetRequiredService<EventHandlingService>().InitializeAsync();
 
             await Task.Delay(Timeout.Infinite);
 

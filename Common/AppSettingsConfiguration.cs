@@ -13,7 +13,7 @@ namespace Common
 
     public class ConnectionStrings
     {
-        public string DiscordContext { get; set; }
+        public string GamesAndStuffContext { get; set; }
     }
 
     public class DiscordTokens
