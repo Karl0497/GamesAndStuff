@@ -62,27 +62,6 @@
         <input hidden asp-for="Columns" value="@Model.Columns" />
 
     </form>
-    <br />
-    <br />
-    <br />
-    <br />
-    <table>
-        @{int count2 = 0;}
-        @for (int r = 0; r < Model.Rows; r++)
-        {
-            @:<tr>
-                @for (int c = 0; c < Model.Columns; c++)
-                {
-
-                    @:<td class="gridButton">
-                        @Model.Grid[count2].Probability;
-                    @:</td>
-                    count2 += 1;
-                }
-            @:</tr>
-        }
-
-    </table>
 </div>
 
 @section Scripts{
