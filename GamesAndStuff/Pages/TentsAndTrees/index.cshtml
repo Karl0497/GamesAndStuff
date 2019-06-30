@@ -1,0 +1,17 @@
+﻿@page
+@model GamesAndStuff.Pages.TentsAndTrees.IndexModel
+@{
+    ViewData["Title"] = "Index";
+}
+
+
+
+<div class ="form-group">
+    <form method="get">
+        <select asp-items="Model.numbers" asp-for="Rows"></select>
+        X
+        <select asp-items="Model.numbers" asp-for="Columns"></select>
+        <input type="submit" value="Generate" asp-page-handler="GenerateGrid" />
+    </form>
+    
+</div>
