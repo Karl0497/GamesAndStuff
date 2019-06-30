@@ -12,14 +12,14 @@
         X
         <select asp-items="Model.numbers" asp-for="Columns"></select>
         <input type="submit" value="Generate" />
-        <input type="button" id="secondaryRun" value="Hackz" />
+        <input type="button" id="secondaryRun" value="Test" />
     </form>
 
 </div>
 
 <div>
     <form method="post">
-        <button type="submit" hidden id="primaryRun">Hackz</button>
+        <button type="submit" hidden id="primaryRun">Test</button>
         <table>
             @{ int count = 0;}
             @{ int constraintCount = 0;}
