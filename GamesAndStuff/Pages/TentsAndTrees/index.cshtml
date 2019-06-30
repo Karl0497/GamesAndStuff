@@ -6,12 +6,111 @@
 
 
 
-<div class ="form-group">
+<div class="form-group">
     <form method="get">
         <select asp-items="Model.numbers" asp-for="Rows"></select>
         X
         <select asp-items="Model.numbers" asp-for="Columns"></select>
-        <input type="submit" value="Generate" asp-page-handler="GenerateGrid" />
+        <input type="submit" value="Generate" />
+        <input type="button" id="secondaryRun" value="Test" />
     </form>
-    
+
 </div>
+
+<div>
+    <form method="post">
+        <button type="submit" hidden id="primaryRun">Test</button>
+        <table>
+            @{ int count = 0;}
+            @{ int constraintCount = 0;}
+            @for (int r = -1; r < Model.Rows; r++)
+            {
+                @:<tr>
+                    @for (int c = -1; c < Model.Columns; c++)
+                    {
+                        if (r >= 0 && c >= 0)
+                        {
+                            @:<td class="gridButton clickableCell @Model.Grid[count].Status">
+                                <input type="hidden" class="index-value" name="Grid.Index" value="@count" />
+                                <input hidden asp-for="Grid[count].Row" value="@r" />
+                                <input hidden asp-for="Grid[count].Column" value="@c" />
+                                <input class="status" hidden asp-for="Grid[count].Status" value="@Model.Grid[count].Status" />
+                                <input class="status" hidden asp-for="Grid[count].Probability" value="@Model.Grid[count].Probability" />
+                            @:</td>
+                            count += 1;
+                        }
+                        else if (r != -1 || c != -1)
+                        {
+                            @:<td class="gridInput">
+                                <input type="hidden" class="index-value" name="Constraints.Index" value="@constraintCount" />
+                                <input type="number" asp-for="Constraints[constraintCount].NumberOfTents" />
+                                <input hidden asp-for="Constraints[constraintCount].Row" value="@r" />
+                                <input hidden asp-for="Constraints[constraintCount].Column" value="@c" />
+                            @:</td>
+                            constraintCount += 1;
+                        }
+                        else
+                        {
+                            <td></td>
+                        }
+                    }
+                @:</tr>
+            }
+
+        </table>
+        <input hidden asp-for="Rows" value="@Model.Rows" />
+        <input hidden asp-for="Columns" value="@Model.Columns" />
+
+    </form>
+    <br />
+    <br />
+    <br />
+    <br />
+    <table>
+        @{int count2 = 0;}
+        @for (int r = 0; r < Model.Rows; r++)
+        {
+            @:<tr>
+                @for (int c = 0; c < Model.Columns; c++)
+                {
+
+                    @:<td class="gridButton">
+                        @Model.Grid[count2].Probability;
+                    @:</td>
+                    count2 += 1;
+                }
+            @:</tr>
+        }
+
+    </table>
+</div>
+
+@section Scripts{
+    <script>
+        $(".clickableCell").click(function (e) {
+            var statusInput = $(e.target).find(".status");
+            var currentStatus = statusInput.val();
+            var nextStatus = "Tree";
+
+            $(e.target).removeClass(currentStatus);
+
+            if (currentStatus == "Tree") {
+                nextStatus = "None"
+            }
+
+            statusInput.val(nextStatus)
+            $(e.target).addClass(nextStatus);
+
+        });
+
+        $("#secondaryRun").click(function () {
+            $("#primaryRun").click();
+        });
+
+    </script>
+}
+
+</script>
+@section Styles {
+    <link href="@Url.Content("~/css/tentsandtrees.css")" rel="stylesheet" type="text/css" />
+}

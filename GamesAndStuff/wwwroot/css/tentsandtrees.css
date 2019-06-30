@@ -1,0 +1,38 @@
+﻿.gridButton {
+    border: 1px outset darkgreen;
+    background-color: lightgrey;
+    height: 35px;
+    width: 35px;
+    cursor: pointer;
+}
+
+.gridInput {
+    height: 35px;
+    width: 35px;
+}
+
+    .gridInput input {
+        height: 25px;
+        width: 25px;
+        margin-left:15%;
+    }
+
+.Tent {
+    background-color: red;
+}
+
+.Tree {
+    background-color: darkgreen;
+}
+.Grass {
+    background-color: lightgreen;
+}
+/*disable number spinner*/
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type="number"] {
+    text-align: center;
+}
