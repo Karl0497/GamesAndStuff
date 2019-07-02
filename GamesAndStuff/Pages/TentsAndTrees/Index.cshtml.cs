@@ -61,10 +61,7 @@ namespace GamesAndStuff.Pages.TentsAndTrees
         public List<Constraint> Constraints { get; set; }
 
         [BindProperty(SupportsGet = true)]
-        public int Rows { get; set; } = 5;
-
-        [BindProperty(SupportsGet = true)]
-        public int Columns { get; set; } = 5;
+        public int Size { get; set; } = 7;
 
         public List<SelectListItem> numbers;
 
@@ -72,9 +69,9 @@ namespace GamesAndStuff.Pages.TentsAndTrees
         {
             InitiateNumberList();
             Grid = new List<GridCell>();
-            for (int i = 0; i < Rows; i++)
+            for (int i = 0; i < Size; i++)
             {
-                for (int j = 0; j < Columns; j++)
+                for (int j = 0; j < Size; j++)
                 {
                     Grid.Add(new GridCell
                     {
@@ -84,13 +81,22 @@ namespace GamesAndStuff.Pages.TentsAndTrees
                     });
                 }
             }
-
-
         }
 
         public IActionResult OnPost()
         {
+            var backupGrid = Grid.Clone();
+            var backupConstraints = Constraints.Clone();
+            PlantGrassOnZeroConstraints(Grid, Constraints);
+            PlantGrassOnCellsWithNoAdjacentTree(Grid);
+            UpdateProbability(Grid, Constraints);
             Grid = Solve(Grid, Constraints, 0);
+
+            if (Grid == null)
+            {
+                Grid = backupGrid;
+                Constraints = backupConstraints;
+            }
             InitiateNumberList();
             return Page();
         }
@@ -98,7 +104,7 @@ namespace GamesAndStuff.Pages.TentsAndTrees
         public void InitiateNumberList()
         {
             numbers = new List<SelectListItem>();
-            for (int i = 4; i < 10; i++)
+            for (int i = 4; i < 30; i++)
             {
                 numbers.Add(new SelectListItem
                 {
@@ -110,55 +116,42 @@ namespace GamesAndStuff.Pages.TentsAndTrees
 
         public List<GridCell> Solve(List<GridCell> grid, List<Constraint> constraints, int iteration)
         {
-            if (!IsValid(grid, constraints))
+            if (grid.Count(c => c.Status == Status.None) == 0)
             {
                 return null;
             }
-
-            PlantGrassOnZeroConstraints(grid, constraints); // Dont need to clone, cant go wrong here (hopefully)
-            PlantGrassOnCellsWithNoAdjacentTree(grid);
-            UpdateProbability(grid, constraints);
 
             //Step 1: Clone the all the lists
             List<GridCell> clonedGrid = grid.Clone();
             List<Constraint> clonedConstraints = constraints.Clone();
 
-            if (IsValid(clonedGrid, clonedConstraints) && !clonedGrid.Any(c => c.Status == Status.None))
-            {
-                return clonedGrid;
-            }
             //Step 2: Find the slot with highest probability to have a tent
             GridCell cell = clonedGrid.Where(c => c.Status == Status.None).OrderBy(c => c.Probability).Last();
 
             //Step 3: Put a tent on it
-            AssignTent(cell, clonedGrid, clonedConstraints);
-
-            //If its invalid, try planting grass on it then keep going using the original grid
-            if (!IsValid(clonedGrid, clonedConstraints))
+            if (AssignTent(cell, clonedGrid, clonedConstraints)) //valid
             {
-                //Find the original cell
-                GridCell originalCell = grid.First(c => c.Row == cell.Row && c.Column == cell.Column);
-                originalCell.Status = Status.Grass;
-                return Solve(grid, constraints, iteration);
+                //Puzzle solved
+                if (IsComplete(clonedGrid, clonedConstraints))
+                {
+                    return clonedGrid;
+                }
+                if (clonedGrid.Count(c => c.Status == Status.None) != 0) // if not filled but incomplete
+                {
+                    //Keep going
+                    var t = Solve(clonedGrid, clonedConstraints, iteration += 1);
+                    if (t != null)
+                    {
+                        return t;
+                    }
+                }
             }
 
-            //Else, if valid, check if its complete. Return if it is, else, keep going using the cloned list
-            if (!clonedGrid.Any(c => c.Status == Status.None))
-            {
-                return clonedGrid;
-            }
+            //Find the original cell and use grass
+            GridCell originalCell = grid.First(c => c.Row == cell.Row && c.Column == cell.Column);
+            originalCell.Status = Status.Grass;
 
-            var t = Solve(clonedGrid, clonedConstraints, iteration += 1);
-            //If fails, current tent does not work
-            if (t == null)
-            {
-                //Find the original cell
-                GridCell originalCell = grid.First(c => c.Row == cell.Row && c.Column == cell.Column);
-                originalCell.Status = Status.Grass;
-                return Solve(grid, constraints, iteration);
-            }
-
-            return t;
+            return Solve(grid, constraints, iteration);
         }
 
         public void UpdateProbability(List<GridCell> grid, List<Constraint> constraints)
@@ -255,7 +248,7 @@ namespace GamesAndStuff.Pages.TentsAndTrees
             return adjacentCells.ToList();
         }
 
-        public void AssignTent(GridCell cell, List<GridCell> grid, List<Constraint> constraints)
+        public bool AssignTent(GridCell cell, List<GridCell> grid, List<Constraint> constraints)
         {
             //Assign tent
             cell.Status = Status.Tent;
@@ -268,9 +261,14 @@ namespace GamesAndStuff.Pages.TentsAndTrees
 
             //Update grid
             PlantGrassOnZeroConstraints(grid, constraints);
-            PlantGrassOnCellsWithNoAdjacentTree(grid);
             PlantGrassAroundTents(grid);
+            if (!IsValid(grid, constraints))
+            {
+                return false;
+            }
+
             UpdateProbability(grid, constraints);
+            return true;
         }
 
         public void PlantGrassAroundTents(List<GridCell> grid)
@@ -279,6 +277,48 @@ namespace GamesAndStuff.Pages.TentsAndTrees
             {
                 cell.Status = Status.Grass;
             }
+        }
+        public bool IsComplete(List<GridCell> grid, List<Constraint> constraints)
+        {
+            if (grid.Count(c => c.Status == Status.Tree) != grid.Count(c => c.Status == Status.Tree))
+            {
+                return false;
+            }
+
+            if (grid.Any(c => c.Status == Status.None))
+            {
+                return false;
+            }
+
+            List<List<GridCell>> groups = new List<List<GridCell>>();
+            foreach (GridCell cell in grid)
+            {
+                if (!groups.Any(g => g.Contains(cell)) && (cell.Status == Status.Tent || cell.Status == Status.Tree))
+                {
+                    groups.Add(GetGroup(cell, grid, new List<GridCell> { cell }));
+                }
+            }
+            //Any group with different number of trees and tents
+            if (groups.Any(g => g.Count(c => c.Status == Status.Tree) != g.Count(c => c.Status == Status.Tent)))
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public List<GridCell> GetGroup(GridCell cell, List<GridCell> grid, List<GridCell> currentGroup)
+        {
+
+            List<GridCell> queue = GetAdjacentCells(cell, grid, false).Where(c => c.Status == Status.Tent || c.Status == Status.Tree).ToList();
+            foreach (GridCell c in queue)
+            {
+                if (!currentGroup.Any(x => x.Row == c.Row && x.Column == c.Column))
+                {
+                    currentGroup.Add(c);
+                    GetGroup(c, grid, currentGroup);
+                }
+            }
+            return currentGroup;
         }
 
         public bool IsValid(List<GridCell> grid, List<Constraint> constraints)
@@ -300,7 +340,6 @@ namespace GamesAndStuff.Pages.TentsAndTrees
             {
                 return false;
             }
-
             return true;
         }
     }

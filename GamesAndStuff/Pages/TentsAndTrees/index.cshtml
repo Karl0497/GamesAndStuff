@@ -8,9 +8,8 @@
 
 <div class="form-group">
     <form method="get">
-        <select asp-items="Model.numbers" asp-for="Rows"></select>
-        X
-        <select asp-items="Model.numbers" asp-for="Columns"></select>
+        Size:
+        <select asp-items="Model.numbers" asp-for="Size"></select>
         <input type="submit" value="Generate" />
         <input type="button" id="secondaryRun" value="Test" />
     </form>
@@ -23,10 +22,10 @@
         <table>
             @{ int count = 0;}
             @{ int constraintCount = 0;}
-            @for (int r = -1; r < Model.Rows; r++)
+            @for (int r = -1; r < Model.Size; r++)
             {
                 @:<tr>
-                    @for (int c = -1; c < Model.Columns; c++)
+                    @for (int c = -1; c < Model.Size; c++)
                     {
                         if (r >= 0 && c >= 0)
                         {
@@ -58,9 +57,7 @@
             }
 
         </table>
-        <input hidden asp-for="Rows" value="@Model.Rows" />
-        <input hidden asp-for="Columns" value="@Model.Columns" />
-
+        <input hidden asp-for="Size" value="@Model.Size" />
     </form>
 </div>
 
