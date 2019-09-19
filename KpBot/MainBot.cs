@@ -45,7 +45,7 @@ namespace KpBot
             {
                 web = new HtmlWeb();
                 await Task.Delay(900000);
-                HtmlDoc = await web.LoadFromWebAsync("https://karlbotweb.azurewebsites.net/");
+                HtmlDoc = await web.LoadFromWebAsync("https://gamesandstuff.azurewebsites.net//");
             }
 
         }
