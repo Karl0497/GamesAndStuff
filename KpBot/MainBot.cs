@@ -29,7 +29,7 @@ namespace KpBot
             Services = new ServiceCollection()
                 .AddSingleton(_client)
                 .BuildServiceProvider();
-            var token = "NjIzODUwMDEyNDc2MTc4NDM3.XYM-fg.GH3TtWutJC7yJO7sQ4Pw3ZoYY4c";
+            var token = "NjIzODUwMDEyNDc2MTc4NDM3.XYN2Lg.NPy0FHrm3gNaZv0qztaM9FWZKgA";
             await InstallCommands();
             await _client.LoginAsync(TokenType.Bot, token);
             await _client.StartAsync();
