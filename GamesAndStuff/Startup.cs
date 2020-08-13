@@ -2,15 +2,19 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Common;
 using KpBot;
+using KpBot.Context;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace GamesAndStuff
 {
@@ -18,9 +22,7 @@ namespace GamesAndStuff
     {
         public Startup(IConfiguration configuration)
         {
-            Configuration = configuration;
-            Task t = new MainBot().MainAsync();
-            Task t2 = new MainBot().KeepAlive();
+            Configuration = configuration;      
         }
 
         public IConfiguration Configuration { get; }
@@ -28,19 +30,14 @@ namespace GamesAndStuff
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.Configure<CookiePolicyOptions>(options =>
-            {
-                // This lambda determines whether user consent for non-essential cookies is needed for a given request.
-                options.CheckConsentNeeded = context => true;
-                options.MinimumSameSitePolicy = SameSiteMode.None;
-            });
-    
-            services.Configure<FormOptions>(options =>
-            {
-                options.ValueCountLimit = int.MaxValue;
-            });
+            services.AddRazorPages();
+            services.AddDbContext<DiscordContext>(options => options.UseSqlServer(Configuration.GetConnectionString("DiscordContext")));
 
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+            // Config
+            services.Configure<AppSettingsConfiguration>(Configuration);
+
+
+            services.KpBotConfigureServices();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -59,9 +56,15 @@ namespace GamesAndStuff
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
-            app.UseCookiePolicy();
 
-            app.UseMvc();
+            app.UseRouting();
+
+            app.UseAuthorization();
+
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapRazorPages();
+            });
         }
     }
 }

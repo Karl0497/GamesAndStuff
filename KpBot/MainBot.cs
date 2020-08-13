@@ -2,41 +2,65 @@
 using Discord.Commands;
 using Discord.WebSocket;
 using HtmlAgilityPack;
+using KpBot.Services;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Linq;
+using System.Net.Http;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
+using WindowsInput;
+using Microsoft.Extensions.Configuration;
+using KpBot.Context;
+using Microsoft.EntityFrameworkCore;
+using Common;
+using Microsoft.Extensions.Options;
 
 namespace KpBot
 {
+    public static class MainBotServiceInjection
+    {
+        public static void KpBotConfigureServices(this IServiceCollection serviceCollection)
+        {
+            serviceCollection
+                   .AddSingleton<DiscordSocketClient>()
+                   .AddSingleton<CommandService>()
+                   .AddSingleton<CommandHandlingService>()
+                   .AddSingleton<HttpClient>();
+        }
+    }
+
     public class MainBot
     {
-        private DiscordSocketClient _client;
-        private CommandService Commands;
-        private ServiceCollection ServiceCollection;
-        private IServiceProvider Services;
+        private IServiceProvider _services;
 
+        public MainBot(IServiceProvider services)
+        {
+            _services = services;
+        }
 
         public async Task MainAsync()
         {
-            _client = new DiscordSocketClient();
-            //  You can assign your bot token to a string, and pass that in to connect.
-            //  This is, however, insecure, particularly if you plan to have your code hosted in a public repository.
-            ServiceCollection = new ServiceCollection();
-            Commands = new CommandService();
+            // You should dispose a service provider created using ASP.NET
+            // when you are finished using it, at the end of your app's lifetime.
+            // If you use another dependency injection framework, you should inspect
+            // its documentation for the best way to do this.
 
-            Services = new ServiceCollection()
-                .AddSingleton(_client)
-                .BuildServiceProvider();
-            var token = "NjIzODUwMDEyNDc2MTc4NDM3.XYN4qw.j73Zq4IeQ8u9tmpeMv0T9ePA7R8";
-            await InstallCommands();
-            await _client.LoginAsync(TokenType.Bot, token);
-            await _client.StartAsync();
+            DiscordSocketClient client = _services.GetRequiredService<DiscordSocketClient>();
+            AppSettingsConfiguration config = _services.GetRequiredService<IOptions<AppSettingsConfiguration>>().Value;
+            // Tokens should be considered secret data and never hard-coded.
+            // We can read from the environment variable to avoid hardcoding.
+            await client.LoginAsync(TokenType.Bot, config.DiscordTokens.KpBot);
+            await client.StartAsync();
 
-            // Block this task until the program is closed.
-            await Task.Delay(-1);
+            // Here we initialize the logic required to register our commands.
+            await _services.GetRequiredService<CommandHandlingService>().InitializeAsync();
+
+            await Task.Delay(Timeout.Infinite);
+
         }
+
         public async Task KeepAlive()
         {
             HtmlWeb web;
@@ -49,31 +73,5 @@ namespace KpBot
             }
 
         }
-        public async Task InstallCommands()
-        {
-
-            _client.MessageReceived += HandleCommand;
-            await Commands.AddModuleAsync<Assembly>(Services);
-
-        }
-
-        public async Task HandleCommand(SocketMessage messageParam)
-        {
-
-            // Don't process the command if it was a System Message
-            var message = messageParam as SocketUserMessage;
-            if (message == null) return;
-            var context = new CommandContext(_client, message);
-            // Create a number to track where the prefix ends and the command begins
-            int argPos = 0;
-            string[] triggers = new string[]{ "what", "when", "how", "who", "where", "why", "?" };
-            if (triggers.Any(x => message.Content.ToLower().Split(' ').Contains(x)))
-            {
-                await context.Channel.SendMessageAsync("ur mum");
-
-            }
-        }
     }
-
- 
 }
