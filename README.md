@@ -1,6 +1,6 @@
 # GamesAndStuff
 
-A very simple web app used as a playground
+A very simple web app used as a playground https://gamesandstuff.azurewebsites.net/
 
 The app is hosted on Azure as part of the free plan. Within the web app, 2 discord bots are running as background threads. There's another background process that makes a web call to the same website to keep the web alive, so the bots will be active 24/7, otherwise, I would have to open the website every 24 hours.
 
