@@ -18,7 +18,14 @@ namespace GamesAndStuff
 
             MainBot KpBot = new MainBot(webHost.Services);
             Task t1 = KpBot.KeepAlive();
-            Task t2 = KpBot.MainAsync();
+            try
+            {
+                Task t2 = KpBot.MainAsync();
+            }
+            catch
+            {
+
+            }
             webHost.Run();
         }
 
